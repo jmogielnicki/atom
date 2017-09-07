@@ -1,0 +1,91 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-117010-49976-qzbrhm/package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-117010-49976-qzbrhm/package.tgz",
+        "spec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-117010-49976-qzbrhm/package.tgz",
+        "type": "local"
+      },
+      "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/apm-install-dir-117010-49976-1sui85p"
+    ]
+  ],
+  "_from": "../d-117010-49976-qzbrhm/package.tgz",
+  "_id": "language-nunjucks@4.1.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/language-nunjucks",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-117010-49976-qzbrhm/package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-117010-49976-qzbrhm/package.tgz",
+    "spec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-117010-49976-qzbrhm/package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:../d-117010-49976-qzbrhm/package.tgz",
+  "_shasum": "2314deb39f9a8fb631cb36862d7548ed64edbc2b",
+  "_shrinkwrap": null,
+  "_spec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-117010-49976-qzbrhm/package.tgz",
+  "_where": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/apm-install-dir-117010-49976-1sui85p",
+  "author": {
+    "name": "alohaas",
+    "email": "olivia@duckduckgo.com",
+    "url": "https://github.com/alohaas"
+  },
+  "bugs": {
+    "url": "https://github.com/alohaas/language-nunjucks/issues"
+  },
+  "contributors": [
+    {
+      "name": "silvenon",
+      "url": "https://github.com/silvenon"
+    },
+    {
+      "name": "RodrigoEspinosa",
+      "url": "https://github.com/RodrigoEspinosa"
+    },
+    {
+      "name": "joelbschwartz",
+      "url": "https://github.com/joelbschwartz"
+    },
+    {
+      "name": "dkebler",
+      "url": "https://github.com/dkebler"
+    },
+    {
+      "name": "puranjayjain",
+      "url": "https://github.com/puranjayjain"
+    }
+  ],
+  "dependencies": {},
+  "description": "Syntax highlighting for nunjucks templates in the Atom editor.",
+  "devDependencies": {},
+  "engines": {
+    "atom": ">=0.174.0 <2.0.0"
+  },
+  "homepage": "http://atom.github.io/language-nunjucks",
+  "keywords": [
+    "language",
+    "nunjucks"
+  ],
+  "license": "MIT",
+  "name": "language-nunjucks",
+  "optionalDependencies": {},
+  "private": true,
+  "readme": "# Nunjucks Language Support in Atom\n\nSyntax highlighting and snippets for nunjucks templates in the Atom editor.\n\nContributions are greatly appreciated.\nPlease fork this repository and open a pull request to add snippets or make grammar tweaks.\n\n![Working Sample](https://raw.githubusercontent.com/alohaas/language-nunjucks/master/screengif/screen1.gif)\n\n## License\nLicensed under the [MIT License](https://raw.githubusercontent.com/alohaas/language-nunjucks/master/LICENSE.md)\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alohaas/language-nunjucks.git"
+  },
+  "version": "4.1.0"
+}

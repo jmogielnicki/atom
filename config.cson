@@ -1,0 +1,99 @@
+"*":
+  core:
+    disabledPackages: [
+      "linter-flow"
+      "linter-stylelint"
+    ]
+    telemetryConsent: "no"
+    themes: [
+      "atom-dark-ui"
+      "monokai-seti"
+    ]
+  editor:
+    autoIndentOnPaste: false
+    fontSize: 15
+    scrollPastEnd: true
+    showIndentGuide: true
+  "exception-reporting":
+    userId: "aae5bcaa-9f6d-514b-4244-94fb8587a611"
+  "git-blame":
+    customCommitUrlTemplateString: "https://phabricator.pinadmin.com/<%- revision %>"
+    showOnlyLastNames: false
+    useCustomUrlTemplateIfStandardRemotesFail: true
+  "git-diff":
+    showIconsInEditorGutter: true
+  "git-history":
+    showDiff: false
+  "js-hyperclick":
+    jumpToImport: true
+  linter:
+    lintOnChange: false
+  "linter-eslint":
+    disableWhenNoEslintConfig: false
+    globalNodePath: "/Users/jmogielnicki/.nvm/versions/node/v4.7.3"
+  "linter-flow":
+    executablePath: "/Users/jmogielnicki/code/pinboard/webapp/node_modules/.bin/flow"
+  "linter-ui-default":
+    showPanel: true
+  minimap:
+    plugins:
+      "git-diff": true
+      "git-diffDecorationsZIndex": 0
+      "highlight-selected": true
+      "highlight-selectedDecorationsZIndex": 0
+  "one-dark-ui":
+    layoutMode: "Compact"
+  react:
+    enabledForAllJavascriptFiles: true
+  "save-workspace-Workspaces":
+    pin_images:
+      panes: [
+        {
+          tabs: [
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/UnauthInterestFeedPage/UnauthInterestFeedPage.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/UnauthPinPage/UnauthPinPage.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/PinGrid/PinGrid.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/pin/Pin.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/pin/PinImage/PinImage.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/UnauthBanner/UnauthBanner.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/signup/GoogleConnectButton/GoogleConnectButton.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/signup/UserLogin.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/lib/User.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/Image/Image.js"
+          ]
+        }
+      ]
+      projectPaths: [
+        "/Users/jmogielnicki/code/pinboard"
+      ]
+    static_grid:
+      panes: [
+        {
+          tabs: [
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/UnauthInterestFeedPage/UnauthInterestFeedPage.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/lib/react/gridUtils.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/PinGrid/PinGrid.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/PinGrid/PinGridCSS.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/AMPUnauthInterestFeedPage/AMPUnauthInterestFeedPage.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/pin/Pin.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/pin/PinCredit/PinCredit.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/pin/PinSocialIcons/PinSocialIcons.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/pin/PinDescription/PinDescription.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/pin/PinIconAndAttribution/PinIconAndAttribution.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/pin/PinImage/PinImage.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/pin/PinMeta/PinMeta.js"
+            "/Users/jmogielnicki/code/pinboard/webapp/app/common/react/components/growth/unauth/amp/PinGridCSS.js"
+          ]
+        }
+      ]
+      projectPaths: [
+        "/Users/jmogielnicki/code/pinboard"
+      ]
+  "split-diff":
+    diffWords: true
+    ignoreWhitespace: true
+    leftEditorColor: "red"
+    rightEditorColor: "green"
+    syncHorizontalScroll: true
+  welcome:
+    showOnStartup: false

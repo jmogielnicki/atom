@@ -1,0 +1,6 @@
+{
+    "filePattern": "{spec/*,lib/**/*}",
+    "autolabels": [
+
+    ]
+}

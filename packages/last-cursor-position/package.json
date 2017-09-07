@@ -1,0 +1,60 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-1161124-21990-4nt1o6/package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-1161124-21990-4nt1o6/package.tgz",
+        "spec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-1161124-21990-4nt1o6/package.tgz",
+        "type": "local"
+      },
+      "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/apm-install-dir-1161124-21990-bsjf5p"
+    ]
+  ],
+  "_from": "../d-1161124-21990-4nt1o6/package.tgz",
+  "_id": "last-cursor-position@0.9.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/last-cursor-position",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-1161124-21990-4nt1o6/package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-1161124-21990-4nt1o6/package.tgz",
+    "spec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-1161124-21990-4nt1o6/package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:../d-1161124-21990-4nt1o6/package.tgz",
+  "_shasum": "5508cda13eb58af3f9cf53f262ef73a589ebbba4",
+  "_shrinkwrap": null,
+  "_spec": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/d-1161124-21990-4nt1o6/package.tgz",
+  "_where": "/private/var/folders/51/_8zr55q53wd63smhxl2h73980000gn/T/apm-install-dir-1161124-21990-bsjf5p",
+  "bugs": {
+    "url": "https://github.com/fcharron/last-cursor-position/issues"
+  },
+  "dependencies": {},
+  "description": "Keeps a history of past cursor position to travel back to",
+  "devDependencies": {},
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "homepage": "https://github.com/fcharron/last-cursor-position#readme",
+  "license": "MIT",
+  "main": "./lib/last-cursor-position",
+  "name": "last-cursor-position",
+  "optionalDependencies": {},
+  "readme": "# last-cursor-position package\n\nThis package keeps a history of past cursor positions and allows to travel\nback to them.\n\n* `alt--` to travel to previous cursor position\n* `alt-_` to undo previous travel\n\n![](http://i.imgur.com/NjtH1SJ.gif)\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fcharron/last-cursor-position.git"
+  },
+  "version": "0.9.0"
+}

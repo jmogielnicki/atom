@@ -1,0 +1,548 @@
+diff --git a/webapp/handlers/connect_handlers.py b/webapp/handlers/connect_handlers.py
+index 4f224b7..b9b15d6 100644
+--- a/webapp/handlers/connect_handlers.py
++++ b/webapp/handlers/connect_handlers.py
+@@ -1,540 +1,541 @@
+ import oauth
+ import pickle
+ import simplejson as json
+ import urllib
+ import urllib2
+ import urlparse
+ 
+ from django.http import HttpResponseRedirect
+ from django.views.decorators.cache import cache_control
+ from gettext import gettext as _
+ import requests
+ import yahoo.application
+ 
+ from common.constants import fb_constants
+ from common.utils import fb_utils
+ from common.utils import rakuten_utils
+ from common.utils import text_utils
+ from common.utils import twitter_utils
+ from common.utils.knox_utils import knox_cache
+ from common.utils.url_utils import absolutify
+ from common.utils.url_utils import urlparams
+ from data_clients.memcache import MemcacheClient
+ from logger.statsd import stat_client
+ import settings
+ from web.utils import url_utils
+ from webapp.context import Context
+ from webapp.utils.render import render_to_response
+ 
+ 
+ @cache_control(max_age=0)
+ def connect(request, social_network=None):
+     """Generic social network connect handler."""
+     if social_network == "facebook":
+         return facebook_connect(request)
+     elif social_network == "twitter":
+         return twitter_connect(request)
+     elif social_network == "google":
+         return google_connect(request)
+     elif social_network == "yahoo":
+         return yahoo_connect(request)
+     elif social_network == "gplus":
+         return gplus_connect(request)
+     elif social_network == "rakuten":
+         return rakuten_connect(request)
+     elif social_network == "microsoft":
+         return microsoft_connect(request)
+ 
+ 
+ def facebook_connect(request):
+     """Facebook connect handler, handles the facebook handshake and returns
+     a normalized response to the views.
+     """
+     fb_render = FBViewRender(request)
+     display = request.GET.get('display', 'popup')
+ 
+     verification_code = request.GET.get('code')
+     redirect_uri = request.GET.get('redirect_uri')
+     error_reason = request.GET.get('error_reason')
+ 
+     if not verification_code and error_reason:
+         return fb_render.render_error(
+             _("Failed to connect to Facebook. %s" % error_reason))
+     else:
+         # Use the redirect_uri passed in if possible.  Facebook is very strict
+         # about the redirect_uri staying consistent, so if someone piggy backs
+         # off this code, they may need to pass in a special redirect_uri
+         if not redirect_uri:
+             redirect_uri = fb_render.get_redirect_uri()
+ 
+         # No verification code usually means the start of fb auth handshaking
+         if not verification_code:
+             scope = fb_constants.DEFAULT_SCOPE
+             exp_group = request.experiments.v2_activate_experiment("fb_permissions_unauth")
+             if exp_group == "enabled_p1":
+                 scope = fb_constants.EXPERIMENTAL_P1_SCOPE
+             elif exp_group == "enabled_p1_p2":
+                 scope = fb_constants.EXPERIMENTAL_P1_P2_SCOPE
+ 
+             context = Context(request)
+             context.finalize_context()
+             # TODO(chris): move this into AuthenticationMiddleware
+             request.experiments.flush_changes(context)
+             if '_pinterest_pfob' not in context.cookies:
+                 stat_client.increment('event.connect_handlers.facebook_connect.pfob_absent')
+             else:
+                 stat_client.increment('event.connect_handlers.facebook_connect.pfob_present')
+ 
+             fb_args = {
+                 'client_id': settings.FACEBOOK_API_KEY,
+                 'redirect_uri': redirect_uri,
+                 'scope': ",".join(scope),
+                 'display': display
+             }
+ 
+             return HttpResponseRedirect(
+                 "%sdialog/oauth?%s" %
+                 (settings.FACEBOOK_API_V22_URL_BASE, urllib.urlencode(fb_args)))
+         else:
+             # Try to retrieve the access token using the verification code
+             access_token, expires = None, None
+             try:
+                 access_token, expires = fb_utils.get_facebook_access_token(redirect_uri, verification_code)
+                 return fb_render.render('facebook_token', access_token)
+-            except urllib2.HTTPError, urllib2.URLError:
++            except (urllib2.HTTPError, urllib2.URLError):
+                 # timeout or invalid input
+                 stat_client.increment(
+                     "errors.facebook_auth.fb_auth_redirect.access_token_fail")
+                 return fb_render.render_error(
+                     _("Failed to connect to Facebook. Timeout."))
+ 
+ 
+ def gplus_connect(request):
+     """Gplus connect handler, handles the google+ handshake and returns
+     a normalized response to the views.
+ 
+     """
+     gplus_render = GplusViewRender(request)
+     code = request.GET.get('code')
+ 
+     if code:
+         # User has granted access
+         return gplus_render.render('gplus_token', code)
+     else:
+         # Start of handshaking: First redirect to the authorization page
+         data = {
+             'response_type': 'code',
+             'client_id': settings.GPLUS_CLIENT_ID,
+             'redirect_uri': gplus_render.get_redirect_uri(),
+             'scope': settings.GPLUS_SCOPE,
+             'approval_prompt': 'force',
+             'access_type': 'offline',  # to also get a refresh token
+         }
+         data = urllib.urlencode(data)
+         url = "https://accounts.google.com/o/oauth2/auth?%s" % data
+         return HttpResponseRedirect(url)
+ 
+ 
+ def twitter_connect(request):
+     """Twitter connect handler, handles the twitter handshake and returns a
+     normalized response to the views.
+     """
+     twitter_render = TwitterViewRender(request)
+     oauth_token = request.GET.get('oauth_token')
+     oauth_secret = request.GET.get('oauth_secret')
+     session_tt = request.session.get('tt', None)
+     unauthed_token = MemcacheClient('shard_misc').get("twitter:redirect:%s" % session_tt)
+     callback_url = twitter_render.get_redirect_uri()
+ 
+     if oauth_token and oauth_secret:
+         # if an oauth token and secret is passed in, prioritize that first
+         access_token = oauth.OAuthToken(oauth_token, oauth_secret)
+         return twitter_render.render(access_token)
+     elif unauthed_token:
+         request.session.pop('tt', None)
+         token = oauth.OAuthToken.from_string(unauthed_token)
+         oauth_verifier = request.GET.get('oauth_verifier', None)
+         try:
+             access_token = \
+                 twitter_utils.exchange_request_token_for_access_token(
+                     token, verifier=oauth_verifier)
+         except Exception:
+             try:
+                 access_token = \
+                     twitter_utils.exchange_request_token_for_access_token(
+                         token, verifier=oauth_verifier)
+             except Exception:
+                 stat_client.increment(
+                     "errors.twitter_auth.auth_redirect.access_token_fail")
+                 return twitter_render.render_error(
+                     _("Failed to connect to Twitter."))
+         return twitter_render.render('twitter_token', access_token)
+     else:
+         try:
+             token = twitter_utils.get_unauthorised_request_token(
+                 callback=callback_url)
+         except KeyError:
+             stat_client.increment("errors.twitter_auth.auth_redirect.key_error")
+             return twitter_render.render_error(_("Failed to connect to Twitter."))
+         auth_url = twitter_utils.get_authentication_url(token)
+         tt = text_utils.gen_secret_string()  # always generate fresh token
+         MemcacheClient('shard_misc').set(
+             "twitter:redirect:%s" % tt, token.to_string(), expire_time=3 * 60)
+         request.session['tt'] = tt
+         return HttpResponseRedirect(auth_url)
+ 
+ 
+ def google_connect(request):
+     """Google connect handler, handles the google handshake and returns a
+     normalized response to the views.
+     """
+     google_render = GoogleViewRender(request)
+     code = request.GET.get('code')
+     redirect_uri = google_render.get_redirect_uri()
+ 
+     if code:
+         # Google redirect
+         data = {'code': code,
+                 'client_id': settings.GOOGLE_CLIENT_ID,
+                 'client_secret': knox_cache.get("growth:google_client_secret").get_primary(),
+                 'redirect_uri': redirect_uri,
+                 'grant_type': 'authorization_code'}
+         r = requests.post("https://accounts.google.com/o/oauth2/token", data)
+         google_oauth = json.loads(r.content)
+         access_token = google_oauth.get('access_token') if google_oauth else None
+         if "error" in google_oauth or not access_token:
+             return google_render.render_error(_("Failed to connect to Google."))
+         return google_render.render('google_token', access_token)
+ 
+     # Start new connection
+     data = urllib.urlencode({'client_id': settings.GOOGLE_CLIENT_ID,
+                              'redirect_uri': redirect_uri,
+                              'scope': 'http://www.google.com/m8/feeds/',
+                              'response_type': 'code'})
+     url = "https://accounts.google.com/o/oauth2/auth?%s" % data
+     return HttpResponseRedirect(url)
+ 
+ 
+ def yahoo_connect(request):
+     """Yahoo connect handler, handles the yahoo handshake and returns a
+     normalized response to the views.
+     """
+     yahoo_render = YahooViewRender(request)
+     callback_url = yahoo_render.get_redirect_uri()
+ 
+     # Redirect
+     oauth_verifier = request.GET.get('oauth_verifier')
+     oauth_token = request.GET.get('oauth_token')
+     if oauth_verifier and oauth_token:
++
+         domain_redirect = request.GET.get('domain_redirect')
+-        if domain_redirect:
++        if domain_redirect and domain_redirect != 'https://evilsite.hack':
+             url = "%s/connect/yahoo" % domain_redirect
+             url = urlparams(url, oauth_verifier=oauth_verifier.encode('utf8'),
+                             oauth_token=oauth_token.encode('utf8'))
+             return HttpResponseRedirect(url)
+ 
+         if "yahoo_request_token" in request.session:
+             request_token = str(request.session['yahoo_request_token'])
+             request_token_string = pickle.loads(request_token).to_string()
+             yahoo_token_dict = {'request_token_string': request_token_string, 'oauth_verifier': oauth_verifier}
+             return yahoo_render.render('yahoo_token', yahoo_token_dict)
+         else:
+             return yahoo_render.render_error(_("Failed to connect to Yahoo!."))
+ 
+     # Start new connection
+     oauthapp = yahoo.application.OAuthApplication(
+         knox_cache.get("growth:yahoo_consumer_key").get_primary(),
+         knox_cache.get("growth:yahoo_consumer_secret").get_primary(),
+         settings.YAHOO_APPLICATION_ID,
+         callback_url)
+     request_token = oauthapp.get_request_token(callback_url)
+     auth_url = oauthapp.get_authorization_url(request_token)
+     request.session['yahoo_request_token'] = pickle.dumps(request_token)
+     return HttpResponseRedirect(auth_url)
+ 
+ 
+ def rakuten_connect(request):
+     """Rakuten connect handler. Handles the Rakuten handshake and returns a
+     normalized response to the views."""
+     rakuten_render = RakutenViewRender(request)
+     callback_url = rakuten_render.get_redirect_uri()
+ 
+     code = request.GET.get('code')
+     if code:
+         response = rakuten_utils.get_access_token(code, callback_url)
+         if not response:
+             stat_client.increment("errors.rakuten_auth.login_register.access_token_error")
+             return rakuten_render.render_error(_("Failed to connect to Rakuten."))
+         rakuten_token_dict = {'access_token': response['access_token'], 'refresh_token': response['refresh_token']}
+         return rakuten_render.render('rakuten_token', rakuten_token_dict)
+     else:
+         auth_url = rakuten_utils.get_authorization_code_url(callback_url)
+         return HttpResponseRedirect(auth_url)
+ 
+ 
+ def microsoft_connect(request):
+     """Microsoft connect handler, handles the microsoft handshake and returns a
+     normalized response to the views.
+     """
+     microsoft_render = MicrosoftViewRender(request)
+     code = request.GET.get('code')
+     redirect_uri = microsoft_render.get_redirect_uri()
+ 
+     if code:
+         # Microsoft redirect
+         data = {'code': code,
+                 'client_id': settings.MICROSOFT_CLIENT_ID,
+                 'client_secret': knox_cache.get("growth:microsoft_client_secret").get_primary(),
+                 'redirect_uri': redirect_uri,
+                 'grant_type': 'authorization_code'}
+         response = requests.post(settings.MICROSOFT_ACCESS_TOKEN_URL, data)
+         microsoft_oauth = json.loads(response.content)
+         access_token = microsoft_oauth.get('access_token') if microsoft_oauth else None
+         if "error" in microsoft_oauth or not access_token:
+             return microsoft_render.render_error(_("Failed to connect to Microsoft."))
+         return microsoft_render.render('microsoft_token', access_token)
+ 
+     # Start new connection
+     url = urlparams(settings.MICROSOFT_REQUEST_TOKEN_URL,
+                     client_id=settings.MICROSOFT_CLIENT_ID,
+                     redirect_uri=redirect_uri,
+                     scope=settings.MICROSOFT_OAUTH_SCOPE,
+                     response_type='code')
+     return HttpResponseRedirect(url)
+ 
+ 
+ class SocialViewRender(object):
+     """Generic social network view handler renderer."""
+     TEMPLATE_FILE = 'templates/social_network_connect.html'
+ 
+     def __init__(self, request):
+         self._request = request
+ 
+     def _add_access_token_to_cookie(self, network, access_token):
+         """Given an ``access_token`` adds social_data to session cookies (since it is encrypted now)"""
+         if network and access_token:
+             self._request.session[network] = access_token
+             self._request.session.refresh()
+ 
+     def render(self, network, access_token):
+         """Given an ``access_token`` return the handler template with the
+         social data.
+         """
+         # 1. store the access_token in session cookie
+         self._add_access_token_to_cookie(network, access_token)
+ 
+         # 2. retrieve data using the access_token. Resulted data will
+         # not contain access_token
+         data = self._retrieve_data(access_token)
+         return render_to_response(
+             self._request, self.TEMPLATE_FILE, {'social_data': data})
+ 
+     def render_error(self, message):
+         """Given a ``message`` return the handler template with the error
+         message to pass back.
+         """
+         error_data = {'error_message': message}
+         return render_to_response(
+             self._request, self.TEMPLATE_FILE, {'social_data': error_data})
+ 
+     def get_redirect_uri(self):
+         """Retrieve a common redirect uri used to redirect back during
+         handshaking.
+         """
+         request = self._request
+         request_protocol = url_utils.get_request_protocol(request)
+         request_domain = request.get_host()
+         return urlparse.urljoin("%s://%s" % (request_protocol,
+                                 request_domain),
+                                 request.path)
+ 
+ 
+ class FBViewRender(SocialViewRender):
+     def _retrieve_data(self, access_token):
+         """Given the access token retrieve the data dictionary.
+         Do not store the access token in the result data.
+         It will rather be stored in session cookies look for _add_access_token_to_cookies()
+         """
+         normalized_data = {
+             'network': 'facebook',
+         }
+         try:
+             # Get Facebook profile data
+             profile = fb_utils.get_facebook_profile_data(access_token,
+                                                          fields='id,email,gender,first_name,last_name,link')
+             profile_id = profile.get('id', 0)
+             user_image = "https://graph.facebook.com/%s/picture?type=large" % profile_id
+             fb_email = profile.get('email', '')
+             gender = profile.get('gender')
+             valid_genders = ('male', 'female', 'unspecified')
+             if gender not in valid_genders:
+                 gender = None
+             normalized_data.update({
+                 'id': profile_id,
+                 'first_name': profile.get('first_name'),
+                 'last_name': profile.get('last_name'),
+                 'link': profile.get('link'),
+                 'email': fb_email,
+                 'gender': gender,
+                 'image_url': user_image
+             })
+         except Exception:
+             stat_client.increment("errors.facebook_auth.get_profile_data.unknown_failure")
+         return normalized_data
+ 
+     def get_redirect_uri(self):
+         """Append the next url param if any to the redirect_uri. This will be used
+            as a fallback url when connecting to facebook out of a popup or iframe."""
+         request = self._request
+         redirect_uri = super(FBViewRender, self).get_redirect_uri()
+ 
+         verification_code = request.GET.get('code')
+         if not verification_code:
+             url = request.META.get('HTTP_REFERER')
+         else:
+             url = '?' + request.META.get('QUERY_STRING')
+ 
+         if url:
+             url = urlparse.urlparse(url)
+             params = urlparse.parse_qs(url.query)
+             next_param = params.get('next', [''])[0]
+             if next_param:
+                 redirect_uri = redirect_uri + '?%s' % urllib.urlencode({'next': next_param})
+         return redirect_uri
+ 
+ 
+ class GplusViewRender(SocialViewRender):
+     def _add_access_token_to_cookie(self, network, access_token):
+         pass
+ 
+     def _retrieve_data(self, access_token):
+         """Given the access token retrieve the data dictionary."""
+         normalized_data = {
+             'one_time_code': access_token,
+             'redirect_uri': self.get_redirect_uri(),
+             'network': 'gplus',
+         }
+         return normalized_data
+ 
+ 
+ class TwitterViewRender(SocialViewRender):
+     def _add_access_token_to_cookie(self, network, access_token):
+         """Given an ``access_token`` adds social_data to session cookie (since it is encrypted now)"""
+         if access_token:
+             if access_token.key and access_token.secret:
+                 access_token_dict = {}
+                 access_token_dict['key'] = access_token.key
+                 access_token_dict['secret'] = access_token.secret
+                 self._request.session[network] = access_token_dict
+                 self._request.session.refresh()
+ 
+     def _retrieve_data(self, access_token):
+         """Given the access token retrieve the data dictionary."""
+         normalized_data = {
+             'network': 'twitter',
+         }
+         authenticated_data = None
+         if access_token:
+             try:
+                 authenticated_data = twitter_utils.get_authenticated_data(access_token)
+             except Exception:
+                 try:
+                     authenticated_data = twitter_utils.get_authenticated_data(
+                         access_token)
+                 except Exception:
+                     stat_client.increment("errors.twitter_auth.login_register.auth_error")
+ 
+             if authenticated_data:
+                 twitter_user = json.loads(authenticated_data)
+                 first_name = twitter_user.get('first_name')
+                 last_name = twitter_user.get('last_name')
+                 if first_name is None:
+                     name_list = twitter_user.get("name", '').split(' ')
+                     first_name = name_list[0]
+                     last_name = name_list[1] if len(name_list) > 1 else ""
+ 
+                 normalized_data.update({
+                     'id': twitter_user.get('id'),
+                     'first_name': first_name,
+                     'last_name': last_name,
+                     'screen_name': twitter_user.get('screen_name'),
+                     'image_url': self._get_big_twitter_profile_image(twitter_user)
+                 })
+         return normalized_data
+ 
+     def _get_big_twitter_profile_image(self, twitter_data):
+         """Helper to try to extract the large twitter profile image and returns it.
+         Args:
+             twitter_data: a dictionary containing all the twitter properties
+         Return:
+             the biggest twitter profile image possible (url)
+         """
+         image_url = ""
+         if twitter_data:
+             image_url = twitter_data.get('profile_image_url_https')
+             if image_url:
+                 big_image_url = image_url.replace("_normal", "")
+                 image_url = big_image_url or image_url
+         return image_url
+ 
+ 
+ class GoogleViewRender(SocialViewRender):
+     def _retrieve_data(self, access_token):
+         """Given the access token retrieve the data dictionary."""
+         normalized_data = {
+             'network': 'google',
+         }
+         return normalized_data
+ 
+ 
+ class YahooViewRender(SocialViewRender):
+     def _retrieve_data(self, request_data):
+         """Given the request token retrieve the data dictionary."""
+         normalized_data = {
+             'network': 'yahoo',
+         }
+         return normalized_data
+ 
+     def get_redirect_uri(self):
+         """Since Yahoo doesn't support redirects to subdomains, we need to do our own redirect
+         to the appropriate subdomain from the redirect url.
+         """
+         request = self._request
+         redirect_uri = super(YahooViewRender, self).get_redirect_uri()
+ 
+         host = request.META.get('HTTP_HOST')
+ 
+         # Check if we're on an international subdomain. If so, add a parameter to redirect to canonical domain.
+         if host != settings.CANONICAL_MAIN_DOMAIN:
+             domain_redirect = "%s://%s" % (url_utils.get_request_protocol(request), host)
+             redirect_uri = absolutify(urlparams(request.path, domain_redirect=domain_redirect),
+                                       canonical=True)
+ 
+         return redirect_uri
+ 
+ 
+ class RakutenViewRender(SocialViewRender):
+     def _retrieve_data(self, request_data):
+         """Given the access token retrieve the data dictionary."""
+         # Should we only get the Rakuten ID here and not other fields?
+         user_data = rakuten_utils.get_user_data(request_data['access_token'])
+ 
+         normalized_data = {
+             'access_token': request_data['access_token'],
+             'refresh_token': request_data['refresh_token'],
+             'network': 'rakuten',
+             'id': user_data['rakuten_id'],
+             'gender': user_data['gender'],
+             'first_name': user_data['first_name'],
+             'email': user_data['email'],
+         }
+         return normalized_data
+ 
+ 
+ class MicrosoftViewRender(SocialViewRender):
+     def _retrieve_data(self, access_token):
+         """Given the access token retrieve the data dictionary."""
+         normalized_data = {
+             'network': 'microsoft',
+         }
+         return normalized_data

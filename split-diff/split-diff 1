@@ -1,0 +1,616 @@
+/* eslint react/forbid-prop-types:0 */
+/* eslint jsx-a11y/click-events-have-key-events:0 */
+/* eslint jsx-a11y/no-static-element-interactions:0 */
+/* eslint jsx-a11y/onclick-has-focus:0 */
+
+import React, { Component, PropTypes } from 'react';
+import ReactDOM from 'react-dom';
+import Button from 'app/common/react/components/growth/unauth/Button/Button';
+import DeepLink from 'app/common/react/components/growth/unauth/lib/Deeplink';
+import EuCookieBar from 'app/common/react/components/growth/unauth/header/EuCookieBar/EuCookieBar.js';
+import http2 from 'app/common/react/components/growth/unauth/lib/CDNUtils';
+import logo from 'app/common/react/components/growth/unauth/lib/images/logo.js';
+import SeamlessExperiment from 'app/common/lib/SeamlessExperiment';
+import trackRegisterAction from 'app/common/lib/util/trackRegisterAction';
+import UserPerceivedTiming from 'app/common/lib/UserPerceivedTiming';
+import { getSrcSet } from 'app/common/react/components/growth/unauth/lib/ImageUtils.js';
+import withI18n, { I18nPropType } from 'app/common/lib/react/withI18n';
+import withUnauthSeoExperiments, { ExperimentsPropType } from 'app/common/lib/react/withUnauthSeoExperiments';
+
+
+const styles = {
+  appInfo: {
+    paddingTop: '10px',
+  },
+  iosAppIcon: {
+    display: 'inline-block',
+    border: '1px solid #e0e0e0',
+    borderRadius: '8px',
+    padding: '4px',
+  },
+  androidAppIcon: {
+    display: 'inline-block',
+    border: '1px solid #e0e0e0',
+    borderRadius: '100%',
+    padding: '2px',
+  },
+  appInfoText: {
+    color: '#555',
+    display: 'inline-block',
+    lineHeight: '17px',
+    margin: '5px',
+    verticalAlign: 'top',
+  },
+  avatar: {
+    borderRadius: '50%',
+  },
+  backgroundWall: {
+    height: '35%',
+    left: '50%',
+    marginLeft: '-172px',
+    marginTop: '-3vh',
+    position: 'absolute',
+    right: '0px',
+  },
+  bottom: {
+    bottom: '0px',
+    height: '250px',
+    paddingRight: '20px',
+    position: 'absolute',
+  },
+  bottomSmall: {
+    bottom: '0px',
+    height: '230px',
+    paddingRight: '20px',
+    position: 'absolute',
+  },
+  continueButton: {
+    fontSize: '18px',
+    height: '45px',
+    width: '100%',
+  },
+  cookieBarWrapper: {
+    position: 'absolute',
+    left: '0',
+    right: '0',
+    top: '-100px',
+    WebkitAnimation: 'outerCookieBarFadeIn .5s 5s linear forwards',
+    MozAnimation: 'outerCookieBarFadeIn .5s 5s linear forwards',
+    animation: 'outerCookieBarFadeIn .5s 5s linear forwards',
+  },
+  gridContainer: {
+    height: '33vh',
+    borderRadius: '8px',
+    marginTop: '10px',
+    overflow: 'hidden',
+  },
+  gridContainerLargeCover: {
+    height: '30vh',
+    borderRadius: '8px',
+    marginTop: '10px',
+    overflow: 'hidden',
+  },
+  gridImage: {
+    marginBottom: '4px',
+    width: '100%',
+  },
+  headerContainer: {
+    alignItems: 'flex-end',
+  },
+  largeCover: {
+    position: 'relative',
+    top: '50%',
+  },
+  minigrid: {
+    columnCount: 3,
+    MozColumnCount: 3,
+    WebkitColumnCount: 3,
+    columnGap: 4,
+    MozColumnGap: 4,
+    WebkitColumnGap: 4,
+    marginTop: '-10px',
+  },
+  pinterestForText: {
+    fontWeight: 'bold',
+    fontSize: '1.1em',
+  },
+  returnInterstitial: {
+    backgroundColor: '#000',
+    backgroundSize: 'cover',
+    position: 'fixed',
+    zIndex: '1000',
+    bottom: '0px',
+    left: '0px',
+    right: '0px',
+    top: '0px',
+    padding: '100% 20px 0px',
+  },
+  returnInterstitialText: {
+    fontSize: '20px',
+    fontWeight: 'bold',
+    color: '#fff',
+    margin: '20px 0px',
+  },
+  returnInterstitialContentContainer: {
+    position: 'fixed',
+    bottom: '20px',
+    left: '20px',
+    right: '20px',
+  },
+  secondaryCTA: {
+    marginTop: '10px',
+    padding: '10px',
+    textAlign: 'center',
+  },
+  secondaryCTAReturnInterstitial: {
+    marginTop: '10px',
+    padding: '10px',
+    textAlign: 'center',
+    color: '#fff',
+  },
+  secondaryCTAText: {
+    color: '#999',
+    fontSize: '12px',
+    fontWeight: 'normal',
+  },
+  title: {
+    color: '#686868',
+    fontSize: '24px',
+    fontWeight: 'bold',
+    lineHeight: '26px',
+    maxHeight: '52px',
+    minHeight: '29px',
+    overflow: 'hidden',
+  },
+  titleContainer: {
+    WebkitFlexBasis: '90%',
+    msFlexBasis: '90%',
+    flexBasis: '90%',
+    WebkitFlexDirection: 'column',
+    msFlexDirection: 'column',
+    flexDirection: 'column',
+    marginRight: '5px',
+  },
+  ukExperimentWrapper: {
+    backgroundColor: '#fff',
+    height: '250px',
+    left: '0px',
+    minWidth: '0px',
+    padding: '10px 20px',
+    position: 'absolute',
+    right: '0px',
+    top: '0px',
+  },
+  wrapper: {
+    backgroundColor: '#fff',
+    bottom: '0px',
+    left: '0px',
+    minWidth: '0px',
+    padding: '10px 20px',
+    position: 'absolute',
+    right: '0px',
+    top: '0px',
+  },
+  upsellText: {
+    borderBottom: '1px solid #eee',
+    color: '#555',
+    fontSize: '2em',
+    fontWeight: 'bold',
+    lineHeight: 1,
+    paddingBottom: '10px',
+  },
+  upsellTextSmall: {
+    borderBottom: '1px solid #eee',
+    color: '#555',
+    fontWeight: 'bold',
+    lineHeight: 1,
+    paddingBottom: '10px',
+  },
+  returnLoginLink: {
+    color: '#fff',
+    fontWeight: 'normal',
+  },
+  seamlessPrimer: {
+    position: 'fixed',
+    zIndex: '1000',
+    top: '0px',
+    bottom: '0px',
+    left: '0px',
+    right: '0px',
+    backgroundColor: 'rgba(5, 5, 5, 0.8)',
+    pointerEvents: 'none',
+    opacity: 0,
+    WebkitTransition: 'opacity 0.5s linear',
+    transition: 'opacity 0.5s linear',
+  },
+  seamlessPrimerBottom: {
+    backgroundColor: '#fff',
+    height: '45%',
+    padding: '20px',
+    width: '100%',
+    bottom: '0px',
+    position: 'absolute',
+    justifyContent: 'space-between',
+    flexDirection: 'column',
+    WebkitJustifyContent: 'space-between',
+    WebkitFlexDirection: 'column',
+  },
+  seamlessPrimerSubtitle: {
+    fontSize: '18px',
+    color: '#555',
+  },
+  seamlessPrimerTitle: {
+    fontSize: '36px',
+    fontWeight: 'bold',
+    color: '#555',
+    width: '80%',
+  },
+  subtitle: {
+    color: '#686868',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    lineHeight: '26px',
+    marginTop: '2px',
+    overflow: 'hidden',
+  },
+};
+
+export class AppInterstitial extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showReturnInterstitial: false,
+      showSeamlessPrimer: false,
+    };
+  }
+
+  componentDidMount() {
+    this.markResourcesFetchingTime();
+    trackRegisterAction('interstitial.header.loaded.' + this.context.userAgent.platform);
+    window.addEventListener('seamlessClick', this.handleShowSeamless);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('seamlessClick', this.handleShowSeamless);
+  }
+
+  handleContinueClick = () => {
+    let shouldShowInterstitial = true;
+    if (SeamlessExperiment.shouldDisable(document.referrer, false)) {
+      shouldShowInterstitial = false;
+    }
+    setTimeout(() => { this.setState({ showReturnInterstitial: shouldShowInterstitial }); }, 3000);
+    if (shouldShowInterstitial) {
+      trackRegisterAction('interstitial.header.open_in_app.' + this.context.userAgent.platform);
+    }
+
+    const deepLink = new DeepLink(this.props.seoUnauthExperiments,
+      this.context.userAgent.raw,
+      this.context.userAgent.platform,
+      this.context.userAgent.platformVersion,
+      this.context.country);
+    deepLink.redirectToApp(this.context.unauthId,
+      'interstitialOpenInApp',
+      this.context.deepLink);
+  };
+
+  handleCloseReturnInterstitialClick = () => {
+    this.setState({ showReturnInterstitial: false });
+  };
+
+  handleShowSeamless = () => {
+    this.setState({ showSeamlessPrimer: true });
+    setTimeout(() => {
+      this.setState({ showSeamlessPrimer: false });
+    }, 1500);
+  };
+
+  markResourcesFetchingTime() {
+    const urls = this.props.singleCoverImage ? [this.props.pins[0]['474x'].url] :
+      this.props.pins.slice(0, 7).map(pin => pin.images[this.props.pinImageSize].url);
+
+    if (urls.length > 0) {
+      const data = {
+        resources: urls,
+      };
+      UserPerceivedTiming.mark(
+        PCONST.UPWT_EVENT_STEP_APP_INTERSTITIAL_RENDERED,
+        data,
+        ReactDOM.findDOMNode(this));
+    }
+  }
+
+  renderSeamlessPrimer() {
+    const { i18n } = this.props;
+    return (
+      <div
+        className={this.state.showSeamlessPrimer ? 'AppInterstitial__seamlessPrimerVisible' : ''}
+        style={styles.seamlessPrimer}>
+        <div className="AppInterstitial__seamlessBottom" style={styles.seamlessPrimerBottom}>
+          <div>
+            {logo(57, true)}
+          </div>
+          <div style={styles.seamlessPrimerSubtitle}>{i18n._('Just a second!')}</div>
+          <div style={styles.seamlessPrimerTitle}>{i18n._('Switching you to our faster, funner app.')}</div>
+        </div>
+      </div>
+    );
+  }
+
+  renderIOSAppSection() {
+    const { i18n } = this.props;
+    return (
+      <div onClick={this.handleContinueClick} role="button">
+        {this.props.avatar ?
+          <div className="AppInterstitial__upsellTextSmall" style={styles.upsellTextSmall}>
+            {this.props.upsellText}
+          </div> :
+          <div style={styles.upsellText}>
+            {i18n._('Pinterest works best if you switch to our iPhone-friendly app')}
+          </div>
+        }
+        <div style={styles.appInfo}>
+          <div style={styles.iosAppIcon}>
+            {logo(45, false)}
+          </div>
+          <div style={styles.appInfoText}>
+            <div style={styles.pinterestForText}>
+              {i18n._('Pinterest for iPhone')}
+            </div>
+            <div className="AppInterstitial__stars" />
+            <div>
+              {i18n._('700,000+ 5-star reviews')}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  renderAndroidAppSection() {
+    const { i18n } = this.props;
+    return (
+      <div onClick={this.handleContinueClick} role="button">
+        {this.props.upsellText ?
+          <div className="AppInterstitial__upsellTextSmall" style={styles.upsellTextSmall}>
+            {this.props.upsellText}
+          </div> :
+          <div style={styles.upsellText}>
+            {i18n._('Pinterest works best if you switch to our Android-friendly app')}
+          </div>
+        }
+        <div style={styles.appInfo}>
+          <div style={styles.androidAppIcon}>
+            {logo(48, false)}
+          </div>
+          <div style={styles.appInfoText}>
+            <div style={styles.pinterestForText}>
+              {i18n._('Pinterest for Android')}
+            </div>
+            <div className="AppInterstitial__stars" />
+            <div>
+              {i18n._('700,000+ 5-star reviews')}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  renderReturnInterstitial() {
+    const darkOverlayStyles = { ...styles.returnInterstitial,
+      ...{ backgroundImage: 'url(' + this.props.pins[0].images['236x'].url + ')',
+        opacity: '0.5', zIndex: '0' } };
+    const { i18n } = this.props;
+    return (
+      <div style={styles.returnInterstitial}>
+        <div style={darkOverlayStyles} />
+        <div style={styles.returnInterstitialContentContainer}>
+          <div>
+            {logo(57, true)}
+          </div>
+          <div style={styles.returnInterstitialText}>
+            {i18n._('Thanks for checking out the Pinterest app!')}
+          </div>
+          <Button
+            className="red continueButton"
+            onClick={this.handleContinueClick}
+            styleOverrides={styles.continueButton}>
+            {i18n._('Continue in app')}
+          </Button>
+          <div
+            onClick={this.handleCloseReturnInterstitialClick}
+            role="button"
+            style={styles.secondaryCTAReturnInterstitial}
+            tabIndex="0">
+            <a href="/login/">
+              <div style={styles.returnLoginLink}>{i18n._('Log in with browser')}
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  renderSecondaryInterstitials() {
+    if (this.context.userAgent.platform === 'ios') {
+      if (this.state.showReturnInterstitial) {
+        return this.renderReturnInterstitial();
+      }
+    } else if (this.context.userAgent.platform === 'android') {
+      return this.renderSeamlessPrimer();
+    }
+    return undefined;
+  }
+
+  renderSingleCoverImage() {
+    const pinImageUrl = this.props.pins[0]['474x'].url;
+    return (
+      <div>
+        {pinImageUrl ? (
+          <img
+            alt={'Article cover'}
+            className="AppInterstitial__largeCover"
+            src={http2(pinImageUrl)}
+            style={styles.largeCover}
+          />) :
+          <div className="AppInterstitial__pinGridBackground" style={styles.backgroundWall}  />
+        }
+      </div>
+    );
+  }
+
+  renderMiniGrid() {
+    const pins = this.props.pins.slice(0, 7);
+    return (
+      <div style={styles.minigrid}>
+        {pins.map((pin, idx) => {
+          let srcSet;
+          if (this.props.srcSet) {
+            srcSet = getSrcSet(pin, this.props.srcSet);
+          }
+          return (
+            <img
+              alt={pin.description}
+              key={idx}
+              src={http2(pin.images[this.props.pinImageSize].url)}
+              srcSet={srcSet}
+              style={styles.gridImage}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
+  renderTitle() {
+    return (
+      <div>
+        <div style={styles.title}>
+          {this.props.title}
+        </div>
+        <div style={styles.subtitle}>
+          {this.props.subtitle}
+        </div>
+      </div>
+    );
+  }
+
+  renderTitleWithAvatar() {
+    return (
+      <div className="AppInterstitial__headerContainer" style={styles.headerContainer}>
+        <div className="AppInterstitial__headerContainer" style={styles.titleContainer}>
+          <div style={styles.title}>
+            {this.props.title}
+          </div>
+          <div style={styles.subtitle}>
+            {this.props.subtitle}
+          </div>
+        </div>
+        <img
+          alt={'Article curator'}
+          className={'AppInterstitial_userAvatar'}
+          height={40}
+          src={http2(this.props.avatar)}
+          style={styles.avatar}
+          width={40}
+        />
+      </div>
+    );
+  }
+
+  render() {
+    const interstitialGrid = (
+      <div
+        className="AppInterstitial__gridContainer"
+        onClick={this.handleContinueClick}
+        role="button"
+        style={this.props.singleCoverImage ? styles.gridContainerLargeCover : styles.gridContainer}>
+        {this.props.singleCoverImage ? this.renderSingleCoverImage() : this.renderMiniGrid()}
+      </div>
+    );
+
+    let appInfoClass = 'AppInterstitial__appInfo';
+    if (this.context.isFBBrowser && this.context.userAgent.platform === 'ios') {
+      appInfoClass = 'AppInterstitial__appInfoFB';
+    } else if (this.props.showUKInterstitial) {
+      appInfoClass = 'AppInterstitial__appInfoUk';
+    }
+    let intlContinueText = this.props.i18n._('Continue', 'Continue button on web');
+    if (this.context.userAgent.isMobile) {
+      intlContinueText = this.props.i18n._('Continue', 'Continue button on mobile web');
+    }
+
+    let title;
+    if (this.props.showUKInterstitial) {
+      title = null;
+    } else if (this.props.avatar) {
+      title = this.renderTitleWithAvatar();
+    } else {
+      title = this.renderTitle();
+    }
+
+    return (
+      <div
+        className="AppInterstitial"
+        style={this.props.showUKInterstitial ? styles.ukExperimentWrapper : styles.wrapper}>
+        {this.renderSecondaryInterstitials()}
+        {title}
+        {this.props.showUKInterstitial ? null : interstitialGrid}
+        <div
+          className={appInfoClass}
+          style={this.props.avatar ? styles.bottomSmall : styles.bottom}>
+          {this.context.userAgent.platform === 'ios' ?
+            this.renderIOSAppSection() : this.renderAndroidAppSection()}
+          <Button
+            className="red continueButton"
+            onClick={this.handleContinueClick}
+            styleOverrides={styles.continueButton}>
+            {intlContinueText}
+          </Button>
+          <div style={styles.secondaryCTA}>
+            {(!this.props.hidePreviewMessage && this.context.isAuthenticated) ?
+              <div>{this.props.i18n._('Scroll down to preview in browser')}</div> :
+              <a href="/login/" style={styles.secondaryCTAText}>{this.props.i18n._('Log in with browser')}</a>
+          }
+          </div>
+        </div>
+        <div style={styles.cookieBarWrapper}>
+          <EuCookieBar />
+        </div>
+      </div>
+    );
+  }
+}
+
+AppInterstitial.propTypes = {
+  avatar: PropTypes.string,
+  hidePreviewMessage: PropTypes.bool,
+  i18n: I18nPropType.isRequired,
+  pinImageSize: PropTypes.string,
+  pins: PropTypes.array.isRequired,
+  seoUnauthExperiments: ExperimentsPropType,
+  showUKInterstitial: PropTypes.bool,
+  singleCoverImage: PropTypes.bool,
+  srcSet: PropTypes.object,
+  subtitle: PropTypes.string,
+  title: PropTypes.string,
+  upsellText: PropTypes.string,
+};
+
+AppInterstitial.contextTypes = {
+  country: PropTypes.string,
+  deepLink: PropTypes.string.isRequired,
+  isAuthenticated: PropTypes.bool.isRequired,
+  isFBBrowser: PropTypes.bool.isRequired,
+  unauthId: PropTypes.string.isRequired,
+  userAgent: PropTypes.shape({
+    isMobile: PropTypes.bool.isRequired,
+    platform: PropTypes.string.isRequired,
+    platformVersion: PropTypes.arrayOf(PropTypes.number),
+    raw: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
+export default withUnauthSeoExperiments(withI18n(AppInterstitial));

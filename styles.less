@@ -1,0 +1,73 @@
+/*
+ * Your Stylesheet
+ *
+ * This stylesheet is loaded when Atom starts up and is reloaded automatically
+ * when it is changed and saved.
+ *
+ * Add your own CSS or Less to fully customize Atom.
+ * If you are unfamiliar with Less, you can read more about it here:
+ * http://lesscss.org
+ */
+
+
+/*
+ * Examples
+ * (To see them, uncomment and save)
+ */
+
+// style the background color of the tree view
+.tree-view {
+  // background-color: whitesmoke;
+}
+
+
+
+.tab-bar .tab {
+  padding-right: 10px;
+  .title {
+    text-overflow: clip;
+  }
+}
+
+// style the background and foreground colors on the atom-text-editor-element itself
+atom-text-editor {
+  // color: white;
+  // background-color: hsl(180, 24%, 12%);
+}
+
+atom-text-editor::shadow  {
+  .bracket-matcher .region {
+    border-bottom: 1px solid #de9536;
+    background-color: #ffd900;
+    opacity: 0.7;
+  }
+}
+
+
+atom-text-editor::shadow atom-text-editor-minimap::shadow .minimap-visible-area::after, atom-text-editor atom-text-editor-minimap::shadow .minimap-visible-area::after, html atom-text-editor-minimap::shadow .minimap-visible-area::after {
+  background-color: rgba(127, 127, 127, 0.25);
+  border-top: 1px solid rgba(127, 127, 127, 0.7);
+  border-bottom: 1px solid rgba(127, 127, 127, 0.7);
+}
+
+.indent-guide-improved {
+  background-color: rgb(30, 30, 30);
+  &.indent-guide-stack {
+    background-color: rgb(40, 40, 40);
+    &.indent-guide-active {
+      background-color: rgb(120, 120, 120);
+    }
+  }
+}
+
+atom-text-editor.is-focused::shadow {
+  // .line.cursor-line {
+  //   background-color: rgb(50, 50, 50);
+  // }
+  .line-number.cursor-line-no-selection {
+    background-color: rgb(100, 100, 100)
+  }
+  .line-number {
+    color: rgb(189, 189, 189)
+  }
+}
